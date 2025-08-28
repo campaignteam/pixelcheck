@@ -4,44 +4,112 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Pixel Check</title>
+
+<!-- Google Fonts: Quicksand -->
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+
 <style>
   :root{
-    --cyan:#79c0c3; --orange:#e9660a; --ink:#111827; --line:#e5e7eb; --err:#b91c1c;
+    --cyan:#79c0c3; 
+    --orange:#ff7b3d; 
+    --ink:#333; 
+    --line:#e5e7eb; 
+    --err:#d62828;
+    --softPink:#ffe8e8;
+    --softBlue:#e9fbff;
   }
   *{box-sizing:border-box}
   body{
-    margin:0; font-family: 'Quicksand', sans-serif;
-    background: linear-gradient(135deg, #e9fbff 0%, #fef6ee 100%);
+    margin:0; 
+    font-family: 'Quicksand', sans-serif;
+    background: linear-gradient(135deg, var(--softBlue) 0%, var(--softPink) 100%);
     color:var(--ink);
   }
   .wrap{max-width:820px;margin:24px auto;padding:0 16px}
-  .card{background:#fff;border-radius:16px;box-shadow:0 10px 24px rgba(0,0,0,.12);padding:20px}
-  h1{margin:0 0 14px;font-size:38px;text-align:center;color:var(--orange);letter-spacing:.3px}
-  .table{width:100%;border-collapse:collapse;margin-top:8px}
-  .table th,.table td{padding:10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
-  .table th{font-size:14px}
-  .rowhead{width:210px;font-weight:700}
+  .card{
+    background:#fff;
+    border-radius:20px;
+    box-shadow:0 8px 20px rgba(0,0,0,.1);
+    padding:26px;
+    transition:.3s;
+  }
+  h1{
+    margin:0 0 16px;
+    font-size:34px;
+    text-align:center;
+    color:var(--orange);
+    letter-spacing:.5px;
+    font-weight:700;
+  }
+  .table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:10px
+  }
+  .table th,.table td{
+    padding:12px;
+    border-bottom:1px solid var(--line);
+    text-align:left;
+    vertical-align:middle;
+    font-size:15px;
+  }
+  .table th{font-size:14px;color:#555}
+  .rowhead{width:210px;font-weight:700;color:var(--orange)}
   input[type="number"], select{
-    width:100%; padding:10px; border:1px solid var(--line); border-radius:10px; font-size:15px; outline:none; background:#fff;
+    width:100%; 
+    padding:10px; 
+    border:1.8px solid var(--line); 
+    border-radius:12px; 
+    font-size:15px; 
+    outline:none; 
+    background:#fff;
+    transition:.2s;
+    font-family:'Quicksand', sans-serif; /* ensure dropdown also uses Quicksand */
+  }
+  input:focus, select:focus{
+    border-color:var(--cyan);
+    box-shadow:0 0 0 3px rgba(121,192,195,0.25);
   }
   .time-grid{display:grid;grid-template-columns:1fr 150px;gap:10px}
   .hint{font-size:12px;opacity:.75;margin-top:8px}
   .btn{
-    margin-top:14px;width:100%;padding:12px;border:0;border-radius:10px;
-    background:var(--orange);color:#fff;font-weight:800;font-size:16px;cursor:pointer;transition:.2s;
+    margin-top:18px;
+    width:100%;
+    padding:14px;
+    border:0;
+    border-radius:12px;
+    background:var(--orange);
+    color:#fff;
+    font-weight:700;
+    font-size:17px;
+    cursor:pointer;
+    transition:.25s;
+    font-family:'Quicksand', sans-serif;
+  }
+  .btn:hover:not(:disabled){
+    background:#ff905c;
+    transform:translateY(-1px);
+    box-shadow:0 4px 10px rgba(0,0,0,.1);
   }
   .btn:disabled{opacity:.45;cursor:not-allowed}
-  .out{margin-top:16px;border:2px solid var(--line);border-radius:12px;padding:22px;text-align:center;background:#fff}
-  .big{font-size:44px;font-weight:900;letter-spacing:.5px}
+  .out{
+    margin-top:20px;
+    border:2px dashed var(--line);
+    border-radius:14px;
+    padding:24px;
+    text-align:center;
+    background:#fff;
+  }
+  .big{font-size:42px;font-weight:700;letter-spacing:.5px}
   .yes{color:var(--cyan)}
   .no{color:var(--orange)}
-  .err{color:var(--err); font-size:13px; margin-top:8px}
+  .err{color:var(--err); font-size:14px; margin-top:10px}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="card">
-    <h1>Are These Pixels Firing?</h1>
+    <h1>✨ Are These Pixels Firing? ✨</h1>
 
     <table class="table">
       <thead>
@@ -59,6 +127,7 @@
               <input id="leadTimeVal" type="number" min="0" step="1" autocomplete="off">
               <select id="leadTimeUnit" aria-label="Lead time unit">
                 <option value="minutes">minute/s</option>
+                <option value="hours">hour/s</option>
                 <option value="days">day/s</option>
                 <option value="weeks">week/s</option>
                 <option value="months">month/s</option>
@@ -75,6 +144,7 @@
               <input id="uniTimeVal" type="number" min="0" step="1" autocomplete="off">
               <select id="uniTimeUnit" aria-label="Universal time unit">
                 <option value="minutes">minute/s</option>
+                <option value="hours">hour/s</option>
                 <option value="days">day/s</option>
                 <option value="weeks">week/s</option>
                 <option value="months">month/s</option>
@@ -99,9 +169,10 @@ function toMinutes(value, unit){
   if(!isFinite(n)) return NaN;
   switch(unit){
     case 'minutes': return n;
+    case 'hours':   return n * 60;
     case 'days':    return n * 1440;
-    case 'weeks':   return n * 10080;     // 7 * 1440
-    case 'months':  return n * 43200;     // 30 * 1440 (simple month)
+    case 'weeks':   return n * 10080;
+    case 'months':  return n * 43200;
     default:        return NaN;
   }
 }
@@ -121,7 +192,7 @@ function validate(){
   document.getElementById('checkBtn').disabled = !allFilled;
 
   document.getElementById('msg').style.display = allFilled ? 'none' : 'block';
-  document.getElementById('msg').textContent = allFilled ? '' : 'Please enter both times and both user counts.';
+  document.getElementById('msg').textContent = allFilled ? '' : '⚠️ Please enter both times and both user counts.';
 }
 
 function check(){
@@ -130,7 +201,6 @@ function check(){
   const leadUsers = +document.getElementById('leadUsers').value;
   const uniUsers  = +document.getElementById('uniUsers').value;
 
-  // Rules: Universal must be more recent AND have more users than Lead
   const activityOK = isFinite(uniTime) && isFinite(leadTime) && uniTime < leadTime;
   const usersOK    = isFinite(uniUsers) && isFinite(leadUsers) && uniUsers > leadUsers;
 
@@ -138,16 +208,8 @@ function check(){
 
   const out = document.getElementById('out');
   out.style.display = 'block';
-  out.innerHTML = `<div class="big ${ok ? 'yes' : 'no'}">${ok ? '🎉 YES 🎉' : '⚠️ NO 🥺'}</div>`;
+  out.innerHTML = `<div class="big ${ok ? 'yes' : 'no'}">${ok ? '🎉 YES 🎉' : '🥺 NO 💔'}</div>`;
 }
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
