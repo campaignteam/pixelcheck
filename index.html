@@ -31,7 +31,6 @@
     border-radius:20px;
     box-shadow:0 8px 20px rgba(0,0,0,.1);
     padding:26px;
-    transition:.3s;
   }
   h1{
     margin:0 0 16px;
@@ -56,42 +55,58 @@
   .table th{font-size:14px;color:#555}
   .rowhead{width:210px;font-weight:700;color:var(--orange)}
   input[type="number"], select{
-    width:100%; 
-    padding:10px; 
-    border:1.8px solid var(--line); 
-    border-radius:12px; 
-    font-size:15px; 
-    outline:none; 
+    width:100%;
+    padding:10px;
+    border:1.8px solid var(--line);
+    border-radius:12px;
+    font-size:15px;
+    outline:none;
     background:#fff;
     transition:.2s;
-    font-family:'Quicksand', sans-serif; /* ensure dropdown also uses Quicksand */
+    font-family:'Quicksand', sans-serif;
   }
   input:focus, select:focus{
     border-color:var(--cyan);
     box-shadow:0 0 0 3px rgba(121,192,195,0.25);
   }
+  input:disabled{
+    background:#f5f5f5;
+    cursor:not-allowed;
+  }
   .time-grid{display:grid;grid-template-columns:1fr 150px;gap:10px}
-  .hint{font-size:12px;opacity:.75;margin-top:8px}
   .btn{
     margin-top:18px;
     width:100%;
     padding:14px;
     border:0;
     border-radius:12px;
-    background:var(--orange);
-    color:#fff;
     font-weight:700;
     font-size:17px;
     cursor:pointer;
     transition:.25s;
     font-family:'Quicksand', sans-serif;
   }
-  .btn:hover:not(:disabled){
+  .btn-primary{
+    background:var(--orange);
+    color:#fff;
+  }
+  .btn-primary:hover:not(:disabled){
     background:#ff905c;
     transform:translateY(-1px);
     box-shadow:0 4px 10px rgba(0,0,0,.1);
   }
-  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn-primary:disabled{opacity:.45;cursor:not-allowed}
+  .btn-secondary{
+    background:#fff;
+    color:var(--cyan);
+    border:2px solid var(--cyan);
+  }
+  .btn-secondary:hover{
+    background:var(--cyan);
+    color:#fff;
+    transform:translateY(-1px);
+    box-shadow:0 4px 10px rgba(0,0,0,.1);
+  }
   .out{
     margin-top:20px;
     border:2px dashed var(--line);
@@ -131,6 +146,7 @@
                 <option value="days">day/s</option>
                 <option value="weeks">week/s</option>
                 <option value="months">month/s</option>
+                <option value="notseen">Not Yet Seen</option>
               </select>
             </div>
           </td>
@@ -148,6 +164,7 @@
                 <option value="days">day/s</option>
                 <option value="weeks">week/s</option>
                 <option value="months">month/s</option>
+                <option value="notseen">Not Yet Seen</option>
               </select>
             </div>
           </td>
@@ -158,13 +175,15 @@
 
     <div id="msg" class="err" style="display:none"></div>
 
-    <button id="checkBtn" class="btn" onclick="check()" disabled>Check</button>
+    <button id="checkBtn" class="btn btn-primary" onclick="check()" disabled>Check</button>
     <div id="out" class="out" style="display:none" aria-live="polite"></div>
+    <button id="resetBtn" class="btn btn-secondary" style="display:none;" onclick="resetForm()">Reset</button>
   </div>
 </div>
 
 <script>
 function toMinutes(value, unit){
+  if(unit === 'notseen') return Infinity;
   const n = +value;
   if(!isFinite(n)) return NaN;
   switch(unit){
@@ -177,22 +196,35 @@ function toMinutes(value, unit){
   }
 }
 
-// Enable button only when all fields have values
-const ids = ['leadTimeVal','leadTimeUnit','leadUsers','uniTimeVal','uniTimeUnit','uniUsers'];
-ids.forEach(id => document.getElementById(id).addEventListener('input', validate));
-ids.forEach(id => document.getElementById(id).addEventListener('change', validate));
+function toggleTimeInput(selectId, inputId){
+  const select = document.getElementById(selectId);
+  const input  = document.getElementById(inputId);
+  if(select.value === 'notseen'){
+    input.value = '';
+    input.disabled = true;
+  } else {
+    input.disabled = false;
+  }
+}
 
 function validate(){
+  const leadUnit = document.getElementById('leadTimeUnit').value;
+  const uniUnit  = document.getElementById('uniTimeUnit').value;
+
   const leadTimeVal = document.getElementById('leadTimeVal').value;
   const leadUsers   = document.getElementById('leadUsers').value;
   const uniTimeVal  = document.getElementById('uniTimeVal').value;
   const uniUsers    = document.getElementById('uniUsers').value;
 
-  const allFilled = leadTimeVal !== '' && leadUsers !== '' && uniTimeVal !== '' && uniUsers !== '';
+  const leadOK = (leadUnit === 'notseen') || (leadTimeVal !== '');
+  const uniOK  = (uniUnit === 'notseen')  || (uniTimeVal !== '');
+
+  const allFilled = leadOK && uniOK && leadUsers !== '' && uniUsers !== '';
   document.getElementById('checkBtn').disabled = !allFilled;
 
   document.getElementById('msg').style.display = allFilled ? 'none' : 'block';
-  document.getElementById('msg').textContent = allFilled ? '' : '⚠️ Please enter both times and both user counts.';
+  document.getElementById('msg').textContent =
+    allFilled ? '' : '⚠️ Please enter both times (or select Not Yet Seen) and both user counts.';
 }
 
 function check(){
@@ -201,15 +233,58 @@ function check(){
   const leadUsers = +document.getElementById('leadUsers').value;
   const uniUsers  = +document.getElementById('uniUsers').value;
 
-  const activityOK = isFinite(uniTime) && isFinite(leadTime) && uniTime < leadTime;
-  const usersOK    = isFinite(uniUsers) && isFinite(leadUsers) && uniUsers > leadUsers;
+  const activityOK = isFinite(leadTime) && isFinite(uniTime) ? (uniTime < leadTime) : true;
+  const usersOK    = isFinite(uniUsers) && isFinite(leadUsers) && (uniUsers > leadUsers);
 
   const ok = activityOK && usersOK;
 
   const out = document.getElementById('out');
   out.style.display = 'block';
   out.innerHTML = `<div class="big ${ok ? 'yes' : 'no'}">${ok ? '🎉 YES 🎉' : '🥺 NO 💔'}</div>`;
+
+  document.getElementById('resetBtn').style.display = 'block';
 }
+
+function resetForm(){
+  document.getElementById('leadTimeVal').value = '';
+  document.getElementById('leadUsers').value   = '';
+  document.getElementById('uniTimeVal').value  = '';
+  document.getElementById('uniUsers').value    = '';
+
+  document.getElementById('leadTimeUnit').value = 'minutes';
+  document.getElementById('uniTimeUnit').value  = 'minutes';
+
+  document.getElementById('leadTimeVal').disabled = false;
+  document.getElementById('uniTimeVal').disabled  = false;
+
+  document.getElementById('out').style.display = 'none';
+  document.getElementById('resetBtn').style.display = 'none';
+
+  document.getElementById('checkBtn').disabled = true;
+  document.getElementById('msg').style.display = 'none';
+}
+
+// attach listeners to all fields so validate runs as you type
+(function init(){
+  const fields = ['leadTimeVal','leadUsers','uniTimeVal','uniUsers'];
+  fields.forEach(id => {
+    document.getElementById(id).addEventListener('input', validate);
+    document.getElementById(id).addEventListener('change', validate);
+  });
+
+  ['leadTimeUnit','uniTimeUnit'].forEach(id => {
+    document.getElementById(id).addEventListener('change', () => {
+      if(id === 'leadTimeUnit') toggleTimeInput('leadTimeUnit','leadTimeVal');
+      if(id === 'uniTimeUnit')  toggleTimeInput('uniTimeUnit','uniTimeVal');
+      validate();
+    });
+  });
+
+  // set initial state
+  toggleTimeInput('leadTimeUnit','leadTimeVal');
+  toggleTimeInput('uniTimeUnit','uniTimeVal');
+  validate();
+})();
 </script>
 </body>
 </html>
